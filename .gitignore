@@ -1,0 +1,7 @@
+#ignore python virtual environment files
+project1_python/
+flask_session/
+__pycache__/
+creds/
+.~lock.books.csv#
+

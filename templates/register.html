@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="../static/style.css">
+    </head>
+    <body>
+        <header>
+            <!--TODO-->
+        </header>
+        <main>
+            <div class="login-page">
+                <div class="form">
+                    <div>{{error_message}}</div>
+                    <form action ="{{url_for('register')}}" method="post" class="register-form">
+                        <label> Login (email)
+                            <input type="email" name="site_login" pattern="^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+" title="Login must be an email address" placeholder="email address"/>
+                        </label>
+                        <label> Visible name
+                            <input type="text" name="visible_name" pattern="^[A-Za-z0-9._-]{3,}" title="Visible name should be at least 3 characters long" placeholder="name"/>
+                        </label>
+                        <label> Password
+                            <input type="password" name="password" pattern="^[A-Za-z0-9._-~!@#$%^&*()+=]{8,}" title="Password should be at least 8 characters long" placeholder="password"/>
+                        </label>
+                        <label> Re-type password
+                            <input type="password" name="password_retype" pattern="^[A-Za-z0-9._-~!@#$%^&*()+=]{8,}" title="Password should be at least 8 characters long" placeholder="retype password"/>
+                        </label>
+                        <button>Create account</button>
+                        <p class="message">Already registered? <a href="{{url_for('index')}}">Sign In</a></p>
+                    </form>
+                    
+                </div>
+            </div>
+        </main>
+        <footer>
+        <!--TODO-->
+        </footer>
+    </body>
+  </html>

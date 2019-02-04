@@ -40,7 +40,7 @@ def login():
 
     for row in result:
         password_hash=row[0]
-        name=row[1]
+        visible_name=row[1]
     try:
         pwd_hasher = PasswordHasher()
         pwd_hasher.verify(password_hash, password)
@@ -51,6 +51,7 @@ def login():
         message="An error has occured during authentication. Please try again."
         return render_template("index.html",message=message)
     session['login']=site_login
+    session['visible_name']=visible_name
     return redirect(url_for('homepage'))
 @app.route("/registration-page")
 def registration_page():
@@ -102,7 +103,38 @@ def register():
     return render_template("success.html",visible_name=visible_name)
 @app.route("/home",methods="GET")
 def homepage():
+    if 'site_login' in session:
+        site_login=session['site_login']
+        visible_name=session['visible_name']
+        return render_template("homepage.html",site_login=site_login,visible_name=visible_name)
+    else:
+        return redirect(url_for('index'))
+@app.route("/search",methods=["POST"])
+def search():
+    if 'site_login' in session:
+        site_login=session['site_login']
+        visible_name=session['visible_name']
+        search_text=request.form.get("search_text")
+        try:
+            result=db.execute("SELECT * FROM books WHERE isbn LIKE '%:search_text%' OR title LIKE '%:search_text%' OR author LIKE '%:search_text%' OR year LIKE '%:search_text%'",{"search_text":search_text}).fetchall()
+
+        except:
+            return redirect(url_for('homepage'))
+
+        else:
+            return render_template("search-results.html",result=result,search_text=search_text)
+    else:
+        return redirect(url_for('index'))
+@app.route("/book-info")
+def book_info(book_isbn,book_title,book_author,book_year):
     pass
+
+
+@app.route("/logout",methods=["POST"])
+def logout():
+    session.pop('site_login',None)
+    session.pop('visible_name',None)
+    return redirect(url_for('index'))
 
 
 

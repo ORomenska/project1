@@ -1,5 +1,9 @@
-Flask
-Flask-Session
-psycopg2
-SQLAlchemy
-argon2_cffi
+Flask==1.1.1
+Flask-Session==0.3.1
+psycopg2==2.8.4
+SQLAlchemy==1.3.13
+argon2_cffi==19.2.0
+requests==2.22.0
+jwt==0.6.1
+PyJWT==1.7.1
+Werkzeug==0.16.0

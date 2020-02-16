@@ -16,7 +16,7 @@ def main():
                 db.commit()
             except:
                 db.rollback()
-                raise
+                raise Exception("Import to DB failed")
             finally:
                 db.close()
                 db.remove()

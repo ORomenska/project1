@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <title>Search results</title>
+      <link rel="stylesheet" type="text/css" href="../static/style_test_homepage.css">
+      <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+      -->
+    </head>
+    <body>
+      <nav>
+        <div class = "navbar">
+          <span><a  class = "nav-home" href="http://127.0.0.1:5000/">eLit</a> </span>
+            <a class = "nav-user" href="{{url_for('logout')}}">Logout</a><a class = "nav-user" href="{{url_for('get_token')}}">Get API token</a><span class = "username">Welcome, {{visible_name}}! </span>
+          </div>
+      </nav>
+    </header>
+      <main class="main-search-results">
+        <h4 class = "main-title">Search results</h4>
+        <section>
+          <p>
+            Here are results of your search, {{visible_name}}.
+          </p>
+          <p>
+            To find out more information about book you're interested in , please click on it.
+          </p>
+          {% if select == "by_isbn" %}
+            <p>There is a list of books searched by ISBN "{{ search_text }}":</p>
+          {% elif select == "by_title" %}
+            <p>There is a list of books searched by book title "{{ search_text }}":</p>
+          {% elif select == "by_author" %}
+            <p>There is a list of books searched by book author "{{ search_text }}":</p>
+          {% endif %}
+          <br>
+          <br>
+          {% if result %}
+          <ul>
+              {% for row in result %}
+                {% set name = row[1] %}
+                {% set isbn  = row[0] %}
+                {% set author = row[2] %}
+                {% set year = row[3] %}
+              
+                <li class = "search-result"><a href="{{url_for('book_info',isbn = isbn)}}"><strong>"{{ name }}"</strong> by <em>{{ author }}</em>, {{ year }}, ISBN:{{isbn}}</a></li>
+              {% endfor %}
+          {% else %}
+            <p>No matches</p>
+          {% endif %}    
+          </ul>
+          <br>
+          <br>
+
+        </section>
+        <section>
+          <!--TO DO-->
+        </section>
+      </main>
+      <footer>
+        <!--TO DO-->
+      </footer>
+    </body>
+</html>

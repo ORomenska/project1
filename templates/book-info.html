@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Book info</title>
+        <link rel="stylesheet" type="text/css" href="../static/style_test_homepage.css">
+<!--      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+-->  
+    </head>
+    <body>
+        <header>
+            <div class = "navbar">
+                <span><a  class = "nav-home" href="http://127.0.0.1:5000/">eLit</a> </span>
+                <a class = "nav-user" href="{{url_for('logout')}}">Logout</a><a class = "nav-user" href="{{url_for('get_token')}}">Get API token</a><span class = "username">Welcome, {{visible_name}}!</span>
+            </div>
+        </header>
+        <main class = "main-search-results">
+            <br>
+            <h4 class = "main-title">Book info</h4>
+            <div>
+                <div class = "book-info-block">
+                    <ul class = "book-info-list">
+                      {% set name = book_db_info[1] %}
+                      {% set isbn  = book_db_info[0] %}
+                      {% set author = book_db_info[2] %}
+                      {% set year = book_db_info[3] %}
+                    
+                      <li><strong>Title:</strong> <em>"{{ name }}"</em></li>
+                      <li><strong>Written by:</strong>  <em>{{ author }}</em></li>
+                      <li><strong>Publishing date:</strong>  <em>{{ year }}</em></li>
+                      <li><strong>ISBN:</strong>  <em>{{isbn}}</em></li>              
+                    </ul>
+                </div>
+                <br>
+            </div>
+                
+            <h4 class = "main-title">Goodreads statistics</h4>
+            {% set work_ratings_count = goodreads_info[0] %}
+            {% set average_rating  = goodreads_info[1] %}
+            <div class = "book-info-block">
+                <ul class = "book-info-list">
+                    <li><strong>Ratings count:</strong>  <em>{{ work_ratings_count }}</em></li>
+                    <li><strong>Average rating:</strong>  <em>{{ average_rating }}</em></li>
+                </ul>
+            </div>
+            <h4 class = "main-title">Reviews</h4>
+            <div class = "book-review-block">
+            {% if book_reviews %}  
+                {% for row in book_reviews %}
+                    {% set visible_name = row[0] %}
+                    {% set review  = row[1] %}
+                    {% set rating = row[2] %}
+                    <ul class = "book-review-list">       
+                        <li><strong>User:</strong>  <em>{{ visible_name }}</em></li>
+                        <li><strong>Review:</strong>  <em>{{ review }}</em></li>
+                        <li><strong>Rating:</strong>  <em>{{ rating }}</em></li>
+                    </ul>
+                {% endfor %}
+            {% else %}
+                <p>There are no reviews yet</p>
+            {% endif %}
+            </div>
+            <h4 class = "main-title">Live a review</h4>
+            <div>
+                    <form id = "submit-review-form" action ="{{url_for('submit_review',isbn=isbn)}}" method="post">
+                        <div class = "add-review-form-row">
+                            <div class="col-25">
+                                <label class = "review-label"> Rating </label>
+                            </div>
+                            <div class="col-75">
+                                <select name = "rating" id="review-rating">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select> 
+                            </div>
+                        </div>
+                        <div class = "add-review-form-row">
+                            <div class="col-25">
+                                <label class = "review-label"> Review</label>
+                            </div>
+                            <div class="col-75">
+                                <textarea required name=review_text id="review-text"></textarea>
+                            </div>
+                        </div>
+                        <div class = "add-review-form-row">
+                            <button id="submit-review-button">Submit Review</button>
+                        </div>
+
+            </div>
+        </form>
+            <br>
+            <br>
+        </main>
+        <footer>
+        <!--TODO-->
+        </footer>
+    </body>
+  </html>

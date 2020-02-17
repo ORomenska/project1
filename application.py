@@ -28,22 +28,21 @@ Session(app)
 engine = create_engine(os.getenv("DATABASE_URL"), pool_pre_ping=True)
 db = scoped_session(sessionmaker(bind=engine))
 
-
+# main route
 @app.route("/")
 def index():
     message="Welcome to eLit! Please use a form below to log in."
     return render_template("index.html",message=message)
+
+# login handler
 @app.route("/login",methods=["POST"])
 def login():
     message=""
     site_login=request.form.get("site_login")
     password=request.form.get("password")
     result=db.execute("SELECT password,visible_name,user_id FROM users WHERE login=:login",{"login": site_login}).fetchone()
-    
-
     ### users table schema
     ###  user_id | login | password | visible_name
-
     if result is None:
         message="Login or password is incorrect. Please try again."
         return render_template("index.html",message=message)
@@ -69,6 +68,8 @@ def login():
 def registration_page():
     message="Please fill the form below to register"
     return render_template("register.html")
+
+# registration handler
 @app.route("/register",methods=["POST"])
 def register():
     site_login=request.form.get("site_login")
@@ -76,7 +77,7 @@ def register():
     password=request.form.get("password")
     password_retype=request.form.get("password_retype")
     error_message=""
-# Checking user registration conventions
+    ### Checking user registration conventions
     if len(site_login)==0:
         error_message="* Login can't be empty"
         return render_template("register.html",error_message=error_message)
@@ -110,10 +111,12 @@ def register():
     except:
         db.rollback()
         db.close()
-        error_message="An error ocured during registartion. Please try later"
+        error_message="An error ocured during registration. Please try later"
         return render_template("register.html",error_message=error_message)
     
     return render_template("success.html",visible_name=visible_name)
+
+# homepage handler
 @app.route("/home",methods=["GET"])
 def homepage():
     if 'site_login' in session:
@@ -121,7 +124,10 @@ def homepage():
         visible_name=session['visible_name']
         return render_template("homepage.html",site_login=site_login,visible_name=visible_name)
     else:
+
         return redirect(url_for('index'))
+
+# search handler
 @app.route("/search",methods=["POST"])
 def search():
     if 'site_login' in session:
@@ -130,7 +136,8 @@ def search():
         search_text = request.form.get('search_text')
         select = str(request.form.get('search_type'))
         result=""
-# Selecting data from DB based on search criterion
+        error=""
+        ### Selecting data from DB based on search criterion
         ### books table schema
         ### isbn | title | author | year 
         if select == "by_isbn" and search_text:
@@ -139,12 +146,12 @@ def search():
                 try:
                     result=db.execute("SELECT * FROM books WHERE isbn LIKE :search_text_str",{"search_text_str":"%"+ search_text_str + "%"}).fetchall()
                 except Exception as e:
-                    result="ERROR" + str(e)
+                    error="ERROR occuerd - could not retrieve books information"
             else:
                 try:
                     result=db.execute("SELECT * FROM books WHERE isbn LIKE :search_text",{"search_text":"%"+ search_text + "%"}).fetchall()
                 except Exception as e:
-                    result="ERROR" + str(e)
+                    error="ERROR occuerd - could not retrieve books information"
 
         elif select == "by_title" and search_text:
             if search_text.isdigit():
@@ -152,12 +159,12 @@ def search():
                 try:
                     result=db.execute("SELECT * FROM books WHERE title LIKE :search_text_str",{"search_text_str":"%"+ search_text_str + "%"}).fetchall()
                 except Exception as e:
-                    result="ERROR" + str(e)
+                    error="ERROR occuerd - could not retrieve books information"
             else:
                 try:
                     result=db.execute("SELECT * FROM books WHERE title LIKE :search_text", {"search_text":"%" + search_text + "%"}).fetchall()
                 except Exception as e:
-                    result="ERROR" + str(e)
+                    error="ERROR occuerd - could not retrieve books information"
 
         elif select == "by_author" and search_text:
             if search_text.isdigit():
@@ -165,33 +172,34 @@ def search():
                 try:
                     result=db.execute("SELECT * FROM books WHERE author LIKE :search_text_str",{"search_text_str":"%"+ search_text_str + "%"}).fetchall()
                 except Exception as e:
-                    result="ERROR" + str(e)
+                    error="ERROR occuerd - could not retrieve books information"
             else:
                 try:
                     result=db.execute("SELECT * FROM books WHERE author LIKE :search_text", {"search_text":"%" + search_text + "%"}).fetchall()
                 except Exception as e:
-                    result="ERROR" + str(e)
-  
-###!!!! ADD HANDLING ERRORS AND PARSING APPROPRITE DATA TO A TEMPLATE!!!!!!
-###Checking results
-        return render_template("search-results.html", result=result, search_text=search_text, visible_name = visible_name, select=select)
+                    error="ERROR occuerd - could not retrieve books information"
+
+        return render_template("search-results.html", result=result, search_text=search_text, visible_name = visible_name, select=select, error=error)
     else:
         return redirect(url_for('index'))
 
+# book info handler
 @app.route("/book-info/<isbn>")
 def book_info(isbn):
-    ###Obtaining info from site DB
+    ### Obtaining info from site DB
     if 'site_login' in session:
         site_login = session['site_login']
         visible_name = session['visible_name']
         user_id = session['user_id']
         book_db_info=""
+        error=""
         try:
             book_db_info=db.execute("SELECT * FROM books WHERE isbn = :isbn",{"isbn": str(isbn)}).fetchone()
         except Exception as e:
-            book_db_info="ERROR"
-            error_info = str(e)
-    ###Obtaining info from GoodReads API
+            error="Error occured  - could not retrieve books information"
+        if not book_db_info:
+            book_db_info=("NA","NA","NA","NA")
+    ### Obtaining info from GoodReads API
         goodreads_info=()
         config_path = os.getcwd() + "/creds/goodreadsAPI.config"
         parser = ConfigParser()
@@ -205,24 +213,22 @@ def book_info(isbn):
             goodreads_ratings_count = str(response_content["books"][0]["work_ratings_count"])
             goodreads_avg_rating = str(response_content["books"][0]["average_rating"])
             goodreads_info=(goodreads_ratings_count,goodreads_avg_rating)
-#        return render_template("book-info.html",local_result = local_result, goodreads_result = goodreads_result)
         else:
-            goodreads_result = ("NA","NA")
-#        return render_template("book-info.html",local_result = local_result, goodreads_result = ("NA","NA"))
+            goodreads_info = ("NA","NA")
+    ### Obtaining reviews from site DB
+    ### reviews table schema
+    ###  isbn | user_id | review | rating
         book_reviews=""
         try:
             book_reviews=db.execute("SELECT users.visible_name,reviews.review,reviews.rating FROM reviews INNER JOIN users ON (reviews.user_id = users.user_id) WHERE reviews.isbn = :isbn ",{"isbn": isbn}).fetchall()
         except Exception as e:
-            book_reviews="ERROR"
-            error_info = str(e)
+            error="Error occured  - could not retrieve reviews"
         
-        return render_template("book-info.html",book_db_info = book_db_info, goodreads_info = goodreads_info, book_reviews = book_reviews, visible_name = visible_name)
+        return render_template("book-info.html",book_db_info = book_db_info, goodreads_info = goodreads_info, book_reviews = book_reviews, visible_name = visible_name, error = error)
     else:
         return redirect(url_for('index'))
 
-
-
-
+# review submission handler
 @app.route("/submit-review/<isbn>",methods=["POST"])
 def submit_review(isbn):
     if 'site_login' in session:
@@ -232,23 +238,33 @@ def submit_review(isbn):
         review_text = request.form.get('review_text')
         rating = request.form.get('rating')
 
-        ### reviews table schema
-        ###  isbn | user_id | review | rating
-        ###### CHECK INTERACTIONS WITH DB!!!!!!!
         try:
             result = db.execute("SELECT * FROM reviews WHERE user_id=:user_id AND isbn=:isbn",{"user_id":user_id,"isbn":isbn}).fetchall()
             if result:
                 return redirect(url_for('book_info',isbn=isbn))
             else:
-                db.execute("INSERT INTO reviews(isbn,user_id,review,rating) VALUES (:isbn,:user_id,:review,:rating)",{"isbn":isbn,"user_id":user_id,"review":review_text,"rating":rating})
-                db.commit()
+                try:
+                    book_db_info=db.execute("SELECT * FROM books WHERE isbn = :isbn",{"isbn": str(isbn)}).fetchone()
+                    if book_db_info:
+                        try:
+                            db.execute("INSERT INTO reviews(isbn,user_id,review,rating) VALUES (:isbn,:user_id,:review,:rating)",{"isbn":isbn,"user_id":user_id,"review":review_text,"rating":rating})
+                            db.commit()
+                        except:
+                            db.rollback()
+                            db.close()
+                    else:
+                        return render_template("homepage.html",site_login=site_login,visible_name=visible_name) 
+                except:
+                    return redirect(url_for('book_info',isbn=isbn))
         except:
-            db.rollback()
-            db.close()
+            return redirect(url_for('book_info',isbn=isbn))
         
         return redirect(url_for('book_info',isbn=isbn))
     else:
         return redirect(url_for('index'))
+
+# get token handler
+# returns JSON document with token 
 @app.route("/get-token")
 def get_token():
     error_message=""
@@ -273,12 +289,12 @@ def get_token():
             error_message="Cannot create token"
             response = make_response({"Message" : error_message})
             return response,500
-        response = make_response({"Auth-token" : token.decode("utf-8")})
+        response = make_response({"Auth-token" : token.decode("utf-8"), "Usage": "api/<isbn>?Auth-token=<your-token>"})
         return response,201
     else:
         return redirect(url_for('index')),302
         
-
+# api handler
 @app.route("/api/<isbn>",methods=["GET"])
 def api(isbn):
     auth_token = request.args.get('Auth-token')
@@ -330,10 +346,7 @@ def api(isbn):
         response = make_response({"Message" : error_message})
         return response,500
     
-
-
-
-
+# logout handler
 @app.route("/logout")
 def logout():
     session.pop('site_login',None)
